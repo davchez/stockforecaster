@@ -16,4 +16,7 @@ Program limitations
 - Any other data requires slight amounts of reformatting in order to be accepted by the program (i.e. unnecessary formatting must be removed other than column titles)
 
 _Picture below reflects Rivian stock from IPO to Novemeber 23, 2023_
-![Image](Output1.png)
+![Image](Output_RIVN.png)
+
+_Picture below reflects NVDA stock from February 7, 2023 to November 27, 2023_
+![Image](Output_NVDA.png)
