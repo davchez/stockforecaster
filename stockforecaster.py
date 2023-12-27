@@ -21,7 +21,7 @@ RAW = ( RAW[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 )
 RAW = RAW.reset_index( drop = True )
 
 data = RAW.astype( 'float32' )
-data = np.reshape( data, (-1, 1) )
+data = np.reshape( data, (-1, 1 ) )
 
 #### SECTION 2: CREATING METHOD WHICH CREATES SLIDING WINDOW ####
 
@@ -117,9 +117,12 @@ history = model.fit( training_window, training_target,
 TRAINING_LOSS = history.history[ 'loss' ]
 VALIDATION_LOSS = history.history[ 'val_loss' ]
 optimal_epoch_index = np.argmin( VALIDATION_LOSS ) + 1
-optimal_val_loss = VALIDATION_LOSS[ optimal_epoch_index ]
+optimal_val_loss = VALIDATION_LOSS[ optimal_epoch_index - 1 ]
 
-optimal_epoch_num = str( optimal_epoch_index - 1 ) 
+if optimal_epoch_index < 10:
+    optimal_epoch_num = "0" + str( optimal_epoch_index ) 
+else:
+    optimal_epoch_num = str( optimal_epoch_index ) 
 
 #### SECTION 6: PERFORMING PREDICTIONS ####
 
