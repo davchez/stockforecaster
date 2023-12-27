@@ -3,7 +3,7 @@ Machine learning Python project that takes advantage of neural network capabilit
 Techniques used for regression
 - Utilizes "sliding window" technique which prepares stock price data to be used as input for the machine learning model (20 day sliding window)
 - Learns from the first 80% of the actual historic stock movement as training data then tests its accuracy on the last 20% of the actual historic stock movement
-- Training RMSE (root mean squared error) is clearly less than the testing RMSE. Training RMSE is based on the first 80% of the historic stock price data and the testing RMSE is based on the last 20% of the historic stock price data
+- Training RMSE is based on the first 80% of the historic stock price data and the testing RMSE is based on the last 20% of the historic stock price data
 
 Program features
 - Is able to predict 20 days into the future
