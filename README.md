@@ -14,3 +14,5 @@ Program limitations
 - Univariate; program only considers stock movement rather than market news. Therefore, business deals and other market factors cannot be considered in this program
 - Observed that beyond 20 days of prediction, program begins to overfit and becomes linear
 - Project photos reflect Rivian ($RIVN) stock price movement; any other data requires slight amounts of reformatting in order to be accepted by the program
+
+[!img](Output1.png)
