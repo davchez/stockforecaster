@@ -18,5 +18,5 @@ Program limitations
 _Picture below reflects Rivian stock from IPO to Novemeber 23, 2023_
 ![Image](Output_RIVN.png)
 
-_Picture below reflects NVDA stock from February 7, 2023 to November 27, 2023_
+_Picture below reflects NVDA stock from February 7, 2023 to December 27, 2023_
 ![Image](Output_NVDA.png)
