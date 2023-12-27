@@ -15,4 +15,4 @@ Program limitations
 - Observed that beyond 20 days of prediction, program begins to overfit and becomes linear
 - Project photos reflect Rivian ($RIVN) stock price movement; any other data requires slight amounts of reformatting in order to be accepted by the program
 
-[!img](Output1.png)
+![Image](Output1.png)
