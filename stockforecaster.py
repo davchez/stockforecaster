@@ -16,7 +16,7 @@ import numpy as np
 
 #### SECTION 1: REFORMATTING DATA SO THAT NEURAL NETWORK CAN READ ####
 
-RAW = pd.read_csv( 'Rivian_Stock_Data.csv' )
+RAW = pd.read_csv( 'stockdata/NVDA_Stock_Data.csv' )
 RAW = ( RAW[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 )
 RAW = RAW.reset_index( drop = True )
 
@@ -57,10 +57,10 @@ training_window, training_target = slidingWindow( train_80, WINDOW_SIZE )
 testing_window, testing_target = slidingWindow( test_20, WINDOW_SIZE )
 
 training_window = np.reshape( training_window, 
-                             ( training_window.shape[ 0 ], 1, training_window.shape[ 1 ] ) )
+                            ( training_window.shape[ 0 ], 1, training_window.shape[ 1 ] ) )
 
-testing_window = np.reshape ( testing_window,
-                             ( testing_window.shape[ 0 ], 1, testing_window.shape[ 1 ] ) )
+testing_window = np.reshape( testing_window,
+                           ( testing_window.shape[ 0 ], 1, testing_window.shape[ 1 ] ) )
 
 #### SECTION 3: CHECKING FOR DATA LEAKS BETWEEN THE TRAINING AND TESTING WINDOWS ####
 
