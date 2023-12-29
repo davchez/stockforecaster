@@ -1,29 +1,26 @@
-############################################################################################
-# Stock Price Forecaster using LSTM neural network model.
-# Uses time series to formulate minimized loss model that predicts stock movements 20 days
-# in advance.  Univariate and does not consider any factors outside of movement patterns.
-# Can be adapted to any stock but data considers Rivian Stock Price from IPO to
-# November 24, 2023 closing price with 80% training data 20% testing data.
-#
-# Credit: Kite on Youtube
-# Bugs: None discovered
+# Title: Stock Price Predictor
+# Author: David Sanchez
+# GitHub: https://github.com/davchez
 # 
-# @author David Sanchez (@davchez on GitHub)
-############################################################################################
+# Desc: Machine learning Python project that takes advantage of neural network capabilities 
+# of the Tensorflow and Keras packages. Formats historic stock prices into time series data 
+# to train long short-term memory model. Predicts stock price movement 
+# x amount of days into the future; generally works best with 20 days predictions.
+#
+# Bugs: None discovered
+#
+# Credit: Caelan from Kite on Youtube
+# Assistance in developing code for neural network model
 
 import pandas as pd
 import numpy as np
 
-#### SECTION 1: REFORMATTING DATA SO THAT NEURAL NETWORK CAN READ ####
-
-RAW = pd.read_csv( 'stockdata/NVDA_Stock_Data.csv' )
+RAW = pd.read_csv( 'stockdata/AAPL_Stock_Data.csv' )
 RAW = ( RAW[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 )
 RAW = RAW.reset_index( drop = True )
 
 data = RAW.astype( 'float32' )
 data = np.reshape( data, (-1, 1 ) )
-
-#### SECTION 2: CREATING METHOD WHICH CREATES SLIDING WINDOW ####
 
 from sklearn.preprocessing import MinMaxScaler
 
@@ -35,10 +32,8 @@ DATA_LENGTH = len( data )
 train_length = int( DATA_LENGTH * 0.80 ) 
 test_length = int( DATA_LENGTH - train_length )
 
-#Personal note: a:b, a, b are standard indexing; after , is column specificity
-
-train_80 = data[ 0:train_length ] #research later
-test_20 = data[ train_length:DATA_LENGTH ] #research later
+train_80 = data[ 0:train_length ]
+test_20 = data[ train_length:DATA_LENGTH ]
 
 def slidingWindow( input, window_size ):
 
@@ -53,27 +48,23 @@ def slidingWindow( input, window_size ):
 
 WINDOW_SIZE = 20
 
-training_window, training_target = slidingWindow( train_80, WINDOW_SIZE )
-testing_window, testing_target = slidingWindow( test_20, WINDOW_SIZE )
+train_window, train_target = slidingWindow( train_80, WINDOW_SIZE )
+test_window, test_target = slidingWindow( test_20, WINDOW_SIZE )
 
-training_window = np.reshape( training_window, 
-                            ( training_window.shape[ 0 ], 1, training_window.shape[ 1 ] ) )
+train_window = np.reshape( train_window, 
+                            ( train_window.shape[ 0 ], 1, train_window.shape[ 1 ] ) )
 
-testing_window = np.reshape( testing_window,
-                           ( testing_window.shape[ 0 ], 1, testing_window.shape[ 1 ] ) )
-
-#### SECTION 3: CHECKING FOR DATA LEAKS BETWEEN THE TRAINING AND TESTING WINDOWS ####
+test_window = np.reshape( test_window,
+                           ( test_window.shape[ 0 ], 1, test_window.shape[ 1 ] ) )
 
 data_shape = data.shape
-training_shape = train_80.shape
-testing_shape = test_20.shape
+train_shape = train_80.shape
+test_shape = test_20.shape
 
-def dataLeakOccured( data_shape, training_shape, testing_shape ):
-    return not( data_shape[0] == ( training_shape[ 0 ] + testing_shape[ 0 ] ) )
+def dataLeakOccured( merge_shape, shape_1, shape_2 ):
+    return not( merge_shape[0] == ( shape_1[ 0 ] + shape_2[ 0 ] ) )
 
-print( dataLeakOccured( data_shape, training_shape, testing_shape ) )
-
-#### SECTION 4: PERFORMING NEURAL NETWORK PREDICTION ####
+print( dataLeakOccured( data_shape, train_shape, test_shape ) )
 
 import tensorflow as tf
 from keras.models import Sequential
@@ -90,7 +81,7 @@ model = Sequential()
 
 model.add( LSTM ( units = 50,
                  activation = 'relu',
-                 input_shape = ( training_window.shape[ 1 ], WINDOW_SIZE ) ) )
+                 input_shape = ( train_window.shape[ 1 ], WINDOW_SIZE ) ) )
 
 model.add( Dropout ( STD_DROPOUT_LAYER ) )
 model.add( Dense( 1 ) )
@@ -104,57 +95,47 @@ checkpoint = ModelCheckpoint( filepath = filepath,
                               save_best_only = True,
                               mode = 'min' )
 
-history = model.fit( training_window, training_target,
+history = model.fit( train_window, train_target,
                      epochs = 100,
                      batch_size = 20,
-                     validation_data = ( testing_window, testing_target ),
+                     validation_data = ( test_window, test_target ),
                      callbacks = [ checkpoint ],
                      verbose = 1,
                      shuffle = False )
 
-#### SECTION 5: CHECKING FOR THE BEST EPOCH MINIMIZING LOSS ####
-
-TRAINING_LOSS = history.history[ 'loss' ]
-VALIDATION_LOSS = history.history[ 'val_loss' ]
-optimal_epoch_index = np.argmin( VALIDATION_LOSS ) + 1
-optimal_val_loss = VALIDATION_LOSS[ optimal_epoch_index - 1 ]
+train_loss = history.history[ 'loss' ]
+val_loss = history.history[ 'val_loss' ]
+optimal_epoch_index = val_loss.index( min( val_loss ) ) + 1
+optimal_val_loss = val_loss[ optimal_epoch_index - 1 ]
+min_val_loss = [ optimal_epoch_index, optimal_val_loss ]
 
 if optimal_epoch_index < 10:
     optimal_epoch_num = "0" + str( optimal_epoch_index ) 
 else:
     optimal_epoch_num = str( optimal_epoch_index ) 
 
-#### SECTION 6: PERFORMING PREDICTIONS ####
-
 from keras.models import load_model
 
 optimal_model = load_model( 'saved_models/model_epoch_' + optimal_epoch_num + '.hdf5' )
 
-training_prediction = optimal_model.predict( training_window )
-training_prediction = scaler.inverse_transform( training_prediction )
-training_prediction = np.reshape( training_prediction, newshape = training_prediction.shape[ 0 ] )
+train_prediction = optimal_model.predict( train_window )
+train_prediction = scaler.inverse_transform( train_prediction )
+train_prediction = np.reshape( train_prediction, newshape = train_prediction.shape[ 0 ] )
 
-testing_prediction = optimal_model.predict( testing_window )
-testing_prediction = scaler.inverse_transform( testing_prediction )
-testing_prediction = np.reshape( testing_prediction, newshape = testing_prediction.shape[ 0 ] )
+test_prediction = optimal_model.predict( test_window )
+test_prediction = scaler.inverse_transform( test_prediction )
+test_prediction = np.reshape( test_prediction, newshape = test_prediction.shape[ 0 ] )
 
-testing_target = scaler.inverse_transform( [ testing_target ] )
-testing_target = np.reshape( testing_target, newshape = testing_prediction.shape[ 0 ] )
+test_target = scaler.inverse_transform( [ test_target ] )
+test_target = np.reshape( test_target, newshape = test_prediction.shape[ 0 ] )
 
-training_target = scaler.inverse_transform( [ training_target] )
-training_target = np.reshape( training_target, newshape = training_prediction.shape[ 0 ] )
-
-#### SECTION 7: CALCULATING LOSS ####
+train_target = scaler.inverse_transform( [ train_target ] )
+train_target = np.reshape( train_target, newshape = train_prediction.shape[ 0 ] )
 
 from sklearn.metrics import mean_squared_error
 
-training_RMSE = np.sqrt( mean_squared_error( training_target, training_prediction ) )
-testing_RMSE = np.sqrt( mean_squared_error( testing_target, testing_prediction ) )
-
-print('Training RMSE is: ' + str( training_RMSE ) + '\n')
-print('Testing RMSE is: ' + str( testing_RMSE ) + '\n')
-
-#### SECTION 8: PREPARING FOR FUTURE PREDICTION OF 20 DAY INCREMENT ####
+train_RMSE = np.sqrt( mean_squared_error( train_target, train_prediction ) )
+test_RMSE = np.sqrt( mean_squared_error( test_target, test_prediction ) )
 
 last_window = data[ -WINDOW_SIZE: ].reshape( ( 1, 1, WINDOW_SIZE ) )
 
@@ -174,26 +155,36 @@ for _ in range( DAYS_AHEAD ):
 future = np.array( future ).reshape( -1, 1 )
 future = scaler.inverse_transform( future )
 
-#### SECTION 9: PLOTTING THE RESULTS OF MODELING ####
-
-import matplotlib.pyplot as plt
-
-stock_prices = np.concatenate( ( training_target, testing_target ), axis = 0 )
-model_prices = np.concatenate( ( training_prediction, testing_prediction ), axis = 0 )
-forecasted_prices = np.concatenate( ( model_prices, future.squeeze() ), axis = 0 )
+stock_prices = np.concatenate( ( train_target, test_target ), axis = 0 )
+model_prices = np.concatenate( ( train_prediction, test_prediction ), axis = 0 )
+forecasted_prices = np.concatenate( ( model_prices, future.squeeze( ) ), axis = 0 )
 
 STOCK_DAYS = range( len( stock_prices ) )
 FORECAST_DAYS = range( len( stock_prices ) + DAYS_AHEAD )
+EPOCHS_RANGE = range( 1, len( train_loss ) + 1 )
 
-plt.figure( figsize = ( 12, 6 ) )
-plt.plot( STOCK_DAYS, stock_prices, label = 'Stock Prices in USD', color = 'green' )
-plt.plot( FORECAST_DAYS, forecasted_prices, label = 'Forecasted Prices in USD', color = 'red' )
+import matplotlib.pyplot as plt
 
-plt.title( 'Stock Price Prediction using Long Short-Term Memory Neural Network Model' )
-plt.xlabel( 'Days' )
-plt.ylabel( 'Stock Price in USD ($)' )
-plt.figtext( 0.5, 0.01, 'Training loss USD (RMSE): ' + str( training_RMSE.round(3) ) + 
-             '. Testing loss USD (RMSE): ' + str( testing_RMSE.round(3) ) + '.', 
-             ha = 'center', fontsize = 10 )
-plt.legend()
-plt.show()
+fig, ( stock_plt, loss_plt ) = plt.subplots( 1, 2, figsize = ( 18, 6 ) )
+
+stock_plt.plot( STOCK_DAYS, stock_prices, label = 'Stock Prices in USD', color = 'green' )
+stock_plt.plot( FORECAST_DAYS, forecasted_prices, label = 'Forecasted Prices in USD', color = 'red' )
+stock_plt.set_title( str( DAYS_AHEAD ) + '-Day Stock Price Prediction' )
+stock_plt.set_xlabel( 'Days' )
+stock_plt.set_ylabel( 'Stock Price in USD' )
+stock_plt.legend( )
+
+loss_plt.plot( EPOCHS_RANGE, train_loss, label = 'Training Loss', color = 'orange' )
+loss_plt.plot( EPOCHS_RANGE, val_loss, label = 'Validation Loss', color = 'blue' )
+loss_plt.scatter( *min_val_loss, 
+                  label = 'Optimal Epoch', marker = 'o', color = 'red' )
+loss_plt.set_title( 'Training and Validation Loss' )
+loss_plt.set_xlabel( 'Epochs' )
+loss_plt.set_ylabel( 'Loss' )
+loss_plt.legend( )
+
+plt.figtext( 0.5, 0.01, 'Training loss USD (RMSE): ' + str( train_RMSE.round( 3 ) ) + 
+             '. Testing loss USD (RMSE): ' + str( test_RMSE.round( 3 ) ) +
+             '. Optimal epoch val loss: ' + str( round( min_val_loss[ 1 ], 5 ) ), 
+             ha = 'center', fontsize = 8 )
+plt.show( )
