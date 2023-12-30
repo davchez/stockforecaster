@@ -15,7 +15,7 @@
 import pandas as pd
 import numpy as np
 
-RAW = pd.read_csv( 'stockdata/AAPL_Stock_Data.csv' )
+RAW = pd.read_csv( 'stockdata/NVDA_Stock_Data.csv' )
 RAW = ( RAW[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 )
 RAW = RAW.reset_index( drop = True )
 
@@ -176,8 +176,8 @@ stock_plt.legend( )
 
 loss_plt.plot( EPOCHS_RANGE, train_loss, label = 'Training Loss', color = 'orange' )
 loss_plt.plot( EPOCHS_RANGE, val_loss, label = 'Validation Loss', color = 'blue' )
-loss_plt.scatter( *min_val_loss, 
-                  label = 'Optimal Epoch', marker = 'o', color = 'red' )
+loss_plt.axvline( x = min_val_loss[ 0 ], color = 'red', alpha = 0.2,
+                  label = 'Optimal Epoch (epoch ' + str( optimal_epoch_index ) + ')' )
 loss_plt.set_title( 'Training and Validation Loss' )
 loss_plt.set_xlabel( 'Epochs' )
 loss_plt.set_ylabel( 'Loss' )
