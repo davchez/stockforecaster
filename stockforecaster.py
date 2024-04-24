@@ -13,7 +13,9 @@ Description:
     found in https://www.geeksforgeeks.org, is enough to train the model and to prevent
     overfitting.
 
-Bugs: Investpy and Investiny packages are deprecated, and are unreliable.
+Bugs: 
+    Investpy and Investiny packages are deprecated, and are unreliable.
+    Length of necessary stock data must be longer than one month.
 
 Credits:
     Caelan from Kite on YouTube.  Assistance in developing code for the neural network model.
@@ -31,93 +33,114 @@ import glob
 import os
 
 DIRECTORY = 'saved_models/'
-PATH = DIRECTORY + 'model_epoch_*.hdf5'
+PATH = DIRECTORY + 'model_epoch_*.keras'
 epochs = glob.glob( PATH )
 
+# Wipes out saved models folder before proceeding
 for epoch in epochs:
     os.remove( epoch )
- 
+
+# Symbol for stock ticker ( i.e. if Apple, enter AAPL )
 symbol = input( "Enter stock symbol: " )
+
+# Exchange that stock is publicly traded on ( i.e. NASDAQ )
 exchange = input( "Enter stock exchange: " )
+
+# Default CSV file of AAPL data will load if investiny/investpy fail
 default = False
 
 try:
-    # Searches Investing.com database to see if query exists
-    search_result = investiny.search_assets( query = symbol, 
+    search_result = investiny.search_assets( query = symbol, # Searches Investing.com database to see if query exists
                                             limit = 1, 
                                             type = 'Stock',
                                             exchange = exchange )
-    investing_id = int( search_result[ 0 ][ 'ticker' ] )
+    investing_id = int( search_result[ 0 ][ 'ticker' ] ) # Specific stock ID ticker collected from search_assets
     print( f"\ninvestiny Search successful.\n" )
-    start_date = input( "Enter start date (mm/dd/yyyy): " )
-    end_date = input( "Enter end date (mm/dd/yyyy): " )
-    historical_data = investiny.historical_data( investing_id = investing_id, 
+    start_date = input( "Enter start date (mm/dd/yyyy): " ) # Beginning date of stock history for analysis
+    end_date = input( "Enter end date (mm/dd/yyyy): " ) # End date of stock history for analysis 
+    historical_data = investiny.historical_data( investing_id = investing_id, # Investiny scrapes Investing.com for the specific stock and its data if found
                                                 from_date = start_date, 
                                                 to_date = end_date )
-    historical_data = pd.DataFrame( historical_data )
-except Exception as e:
+    historical_data = pd.DataFrame( historical_data ) # Converted to DataFrame for data analysis purposes
+except Exception as e: # Investiny package failed due to erroneous user input or failure to connect to Investing.com
     print( "Search failed:", e, '\nTrying again with investpy package.' )
     try:
-        country = input( "Enter country of company: ")
-        search_result = investpy.search_quotes( text = symbol,
+        country = input( "Enter country of company: ") # Country of origin of company
+        search_result = investpy.search_quotes( text = symbol, # Using investpy search function to look for company
                                                products = [ 'stocks' ],
                                                countries = [ country ],
                                                n_results = 1 )
         print( f"\ninvestpy Search successful.\n" )
-        start_date = input( "Enter start date (dd/mm/yyyy): " )
-        end_date = input( "Enter end date (dd/mm/yyyy): " )
-        historical_data = search_result.retrieve_historical_data( from_date = start_date,
+        start_date = input( "Enter start date (dd/mm/yyyy): " ) # Beginning date of stock history for analysis
+        end_date = input( "Enter end date (dd/mm/yyyy): " ) # End date of stock history for analysis
+        historical_data = search_result.retrieve_historical_data( from_date = start_date, # DataFrame of historical stock data from time range
                                                                  to_date = end_date )
-    except Exception as e:
-        print( "Search failed:", e, '\nResorting to default data.' )
-        default = True
+    except Exception as e: # Investiny and investpy failed
+        print( "Search failed:", e, '\nResorting to default data.' ) # Default data being AAPL stock data
+        default = True # Resort to default, use preloaded CSV file
 
-if default == False:
+if default == False: # If investiny/investpy worked
     print( f"""\nHistorical data for { symbol }:
           START: { start_date }
           END: { end_date }\n""" )
-    df = historical_data.reset_index()
-else:
+    df = historical_data.reset_index() # Ensuring that indices are formatted correctly before analysis/tidying
+else: # IF investiny/investpy failed
     df = pd.read_csv( 'stockdata/AAPL_Stock_Data.csv' )
+    symbol = 'AAPL'
 
 # Clean data and prepare for analysis
-df.columns = df.columns.str.lower()
-df[ 'date' ] = pd.to_datetime( df[ 'date' ], errors = 'coerce' )
-df = df.sort_values( by = 'date', ascending = True )
+df.columns = df.columns.str.lower() # Lowercasing all column labels in the DataFrame
+df[ 'date' ] = pd.to_datetime( df[ 'date' ], errors = 'coerce' ) # Convert all date entries to datetime
+df = df.sort_values( by = 'date', ascending = True ) # Such that the newest stock data point is last
+df = ( df[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 ) # Isolated date and close columns, but drops the date column
+df = df.reset_index( drop = True ) # Removes original indices so that only the raw indices for the prices remain (just prices)
 
-# Isolated date and close columns, but drops the date column (axis = 1)
-df = ( df[ [ 'date', 'close' ] ] ).drop( 'date', axis = 1 )
+prices_df = df.astype( 'float32' ) # Converts all price data to 32 digit float values
+prices_df = np.reshape( prices_df, ( -1, 1 ) ) # Reshapes data into necessary rows and one column
 
-# Removes original indices so that only the raw indices for the prices remain (just prices)
-df = df.reset_index( drop = True )
+from sklearn.preprocessing import MinMaxScaler # Necesssary to constrict range to improve runtime
 
-# Converts all price data to 32 digit float values
-prices_df = df.astype( 'float32' )
+scaler = MinMaxScaler( feature_range = ( 0, 1 ) ) # Reshapes data into variable "scaler" so that it shrinks all values of data into range between 0 and 1
 
-# Reshapes the data variable so that it allows as many rows as possible but formats it into one column
-prices_df = np.reshape( prices_df, ( -1, 1 ) )
-
-from sklearn.preprocessing import MinMaxScaler
-
-# Reshapes data into variable "scaler" so that it shrinks all values of data into range between 0 and 1
-scaler = MinMaxScaler( feature_range = ( 0, 1 ) )
-
-# Calculates the minimum and maximum values in data, then scales it into a range between 0 and 1
-prices_df = scaler.fit_transform( prices_df )
+prices_df = scaler.fit_transform( prices_df ) # Calculates the minimum and maximum values in data, then scales it into a range between 0 and 1
 
 DATA_LENGTH = len( prices_df )
 
-# Separating the training data of the program into the first 80% of the price movement
-training_phase = int( DATA_LENGTH * 0.80 ) 
+training_phase = int( DATA_LENGTH * 0.80 ) # Separating the training data of the program into the first 80% of the price movement
 
-# Separating the validation/testing data of the program into the second 20% of the price movement
-val_phase = int( DATA_LENGTH - training_phase )
+val_phase = int( DATA_LENGTH - training_phase ) # Separating the validation/testing data of the program into the second 20% of the price movement
 
-# Implementing length
-training_df = prices_df[ 0:training_phase ]
-val_df = prices_df[ training_phase:DATA_LENGTH ]
+training_df = prices_df[ 0:training_phase ] # First 80% of stock data
+val_df = prices_df[ training_phase:DATA_LENGTH ] # Last 20% of stock data
 
-# Separating data such that it creates time-series data which will be processed later on
+"""
+Generates windows used to partition and prepare data for LSTM predictive 
+training.  The model needs to learn to predict a value based on a sequence
+of previous values.
+
+This function uses a times series data array and window size as parameters 
+for partitioning time series data sets, and constructs an array of sliding 
+windows on the training data with corresponding target values.  Each target
+immediately follows its corresponding window.
+
+Parameters
+----------
+input : ndarray
+    A 2D NumPy array of shape ( n, 1 ) such that each row represents a
+    sequential and chronological value from the time series stock data.
+window_size : int
+    Length of the window and the number of data points to include in each
+    window.  Therefore there will be n - window_size windows generated.
+
+Returns
+-------
+tuple of ndarray
+    Tuple containing two elements, the first being a 3D NumPy array of
+    shape ( n_windows, 1, window_size ) where each element is a window
+    of 'window_size' consecutive samples from the input array.  
+    The second element is a 1D array of length `n_windows` where each 
+    element is the target value for the corresponding window.
+"""
 def slidingWindow( input, window_size ):
 
     WINDOW, TARGET = [], []
@@ -197,7 +220,7 @@ model.add( Dropout ( STD_DROPOUT_LAYER ) )
 model.add( Dense( 1 ) )
 model.compile( loss = 'mean_squared_error' )
 
-filepath = 'saved_models/model_epoch_{epoch:02d}.hdf5'
+filepath = 'saved_models/model_epoch_{epoch:02d}.keras'
 
 # Model only remembers best training points and forgets lossy training data
 checkpoint = ModelCheckpoint( filepath = filepath, 
@@ -235,7 +258,7 @@ scores = []
 
 for epoch in epochs:
     model = load_model( epoch )
-    regex = re.search( r'model_epoch_(\d+).hdf5', epoch )
+    regex = re.search( r'model_epoch_(\d+).keras', epoch )
     index = int( regex.group( 1 ) ) - 1
 
     # Training phase movement of first 80% of data is predicted using optimal epoch
@@ -269,10 +292,10 @@ for epoch in epochs:
 
     score = ALPHA * ( training_MSE + training_RMSE ) + ( 1 - ALPHA ) * ( val_MSE + val_RMSE )
     
-    scores.append( ( str( index + 1 ), training_MSE, training_RMSE, val_MSE, val_RMSE, score ) )
+    scores.append( ( str( index + 1 ), training_MSE, training_RMSE, val_MSE, val_RMSE, training_prediction_temp, val_prediction_temp, score ) )
 
 scores_df = pd.DataFrame( scores )
-scores_df.columns = [ 'epoch', 'training MSE', 'training RMSE', 'validation MSE', 'validation RMSE', 'score' ]
+scores_df.columns = [ 'epoch', 'training MSE', 'training RMSE', 'validation MSE', 'validation RMSE', 'training prediction', 'validation prediction', 'score' ]
 
 print( scores_df )
 
@@ -282,19 +305,17 @@ optimal_epoch_num = scores_df.iloc[ optimal_index, 0 ]
 if int( optimal_epoch_num ) < 10:
     optimal_epoch_num = '0' + optimal_epoch_num
 
-optimal_model = load_model( 'saved_models/model_epoch_' + str( optimal_epoch_num ) + '.hdf5' )
+optimal_model = load_model( 'saved_models/model_epoch_' + str( optimal_epoch_num ) + '.keras' )
 optimal_training_RMSE = scores_df.iloc[ optimal_index, 2 ]
 optimal_val_RMSE = scores_df.iloc[ optimal_index, 4 ]
 
 # Training phase movement of first 80% of data is predicted using optimal epoch
 # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
-training_prediction = scaler.inverse_transform( model.predict( training_window ) )
-training_prediction = np.reshape( training_prediction, training_prediction.shape[ 0 ] )
+training_prediction = scores_df.iloc[ optimal_index, 5 ]
     
 # Testing phase movement of remaining 20% of data is predicted using optimal epoch
 # Removes the standardizing scale of [0, 1] to return prediction to original scaling [min, max]
-val_prediction = scaler.inverse_transform( model.predict( val_window ) )
-val_prediction = np.reshape( val_prediction, val_prediction.shape[ 0 ] )
+val_prediction = scores_df.iloc[ optimal_index, 6 ]
 
 training_target = np.reshape( training_target, ( -1, 1 ) )
 val_target = np.reshape( val_target, ( -1, 1 ) )
@@ -346,6 +367,7 @@ forecasted_prices = np.concatenate( ( prices_model, forecast.squeeze( ) ), axis 
 STOCK_DAYS = range( len( prices_actual ) )
 FORECAST_DAYS = range( len( prices_actual ) + DAYS_AHEAD )
 EPOCHS_RANGE = range( 1, len( training_loss_list ) + 1 )
+FINAL_PRICE = str( round( forecasted_prices[ -1 ], 2 ) )
 
 import matplotlib.pyplot as plt
 
@@ -354,7 +376,9 @@ fig, ( stock_plt, loss_plt ) = plt.subplots( 1, 2, figsize = ( 18, 6 ) )
 
 stock_plt.plot( STOCK_DAYS, prices_actual, label = 'Stock Prices in USD', color = 'green' )
 stock_plt.plot( FORECAST_DAYS, forecasted_prices, label = 'Forecasted Prices in USD', color = 'red' )
-stock_plt.set_title( str( DAYS_AHEAD ) + '-Day Stock Price Prediction' )
+stock_plt.plot( FORECAST_DAYS[ -1 ], forecasted_prices[ -1 ], marker = 'o', markersize = '5', markerfacecolor = 'blue',
+               alpha = 0.2, label = f'20-day price: ${ FINAL_PRICE }' )
+stock_plt.set_title( f'{ str( DAYS_AHEAD ) }-Day Stock Price Prediction for { symbol.upper() }' )
 stock_plt.set_xlabel( 'Days' )
 stock_plt.set_ylabel( 'Stock Price in USD' )
 stock_plt.legend( )
@@ -368,8 +392,8 @@ loss_plt.set_xlabel( 'Epochs' )
 loss_plt.set_ylabel( 'Loss' )
 loss_plt.legend( )
 
-plt.figtext( 0.5, 0.01, 'Training loss USD (RMSE): ' + str( optimal_training_RMSE.round( 3 ) ) + 
-             '. Testing loss USD (RMSE): ' + str( optimal_val_RMSE.round( 3 ) ) +
+plt.figtext( 0.5, 0.01, 'Training loss USD (RMSE): ' + str( round( optimal_training_RMSE, 3 ) ) + 
+             '. Testing loss USD (RMSE): ' + str( round( optimal_val_RMSE, 3 ) ) +
              '. Optimal epoch score: ' + str( round( scores_df[ 'score' ].min(), 5 ) ), 
              ha = 'center', fontsize = 8 )
 plt.show( )
