@@ -1,3 +1,5 @@
+Pre-release v1.00
+
 Machine learning Python project that takes advantage of neural network capabilities of the Tensorflow and Keras packages. Formats historic stock prices into time series data to train long short-term memory model. Predicts stock price movement 20 days into the future.
 
 Techniques used for training
