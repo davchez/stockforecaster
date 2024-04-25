@@ -14,8 +14,8 @@ Description:
     overfitting.
 
 Bugs: 
-    Investpy and Investiny packages are deprecated, and are unreliable.
-    Length of necessary stock data must be longer than six months.
+    Investpy and Investiny packages are not entirely reliable.
+    Length of necessary stock data must be longer than 5 months for program to work.
 
 Credits:
     Caelan from Kite on YouTube.  Assistance in developing code for the neural network model.
@@ -23,6 +23,9 @@ Credits:
 Citation:
     Alvaro Bartolome del Canto. investpy - Financial Data Extraction from Investing.com with Python.
     2018-2021. GitHub Repository. Available at: https://github.com/alvarobartt/investpy
+
+Notes:
+    Small observation made is that the model seems to work well with stock data just over one year.
 """
 
 import pandas as pd

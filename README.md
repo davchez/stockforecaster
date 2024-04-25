@@ -1,27 +1,48 @@
-Pre-release v1.01
+Title: Stock Price Predictor
+Author: David Sanchez
+GitHub: https://github.com/davchez
 
-Machine learning Python project that takes advantage of neural network capabilities of the Tensorflow and Keras packages. Formats historic stock prices into time series data to train long short-term memory model. Predicts stock price movement 20 days into the future.
+Description:
+    This machine learning Python project leverages the neural network capabilities of the TensorFlow
+    and Keras packages.  It formats historic stock prices into time series data to train a long short-term
+    memory (LSTM) model.  The model predicts stock price movements x amount of days into the future;
+    it generally works best with predictions spanning 20 days.
 
-Techniques used for training
-- Utilizes "sliding window" technique which prepares stock price data to be used as input for the machine learning model (20 day sliding window)
-- Learns from the first 80% of the actual historic stock movement as training data then tests its accuracy on the last 20% of the actual historic stock movement
-- Training RMSE is based on the first 80% of the historic stock price data and the testing RMSE is based on the last 20% of the historic stock price data
+    The model allows 15 epochs of the entire data set, which, according to scientific literature
+    found in https://www.geeksforgeeks.org, is enough to train the model and to prevent
+    overfitting.
 
-Program features
-- Is able to predict 20 days into the future
-- Utilizes 50 neurons for fitting with a 20% dropout layer to prevent overfitting during training and testing
-- Random seeds for NumPy and Tensorflow packages are stabilized and thus outputs are reproducable
+Bugs: 
+    Investpy and Investiny packages are not entirely reliable.
+    Length of necessary stock data must be longer than 5 months for program to work.
 
-Program limitations
-- Univariate; program only considers stock movement rather than market news. Therefore, business deals and other market factors cannot be considered in this program
-- Observed that beyond 20 days of prediction, program begins to overfit and becomes linear
-- Any other data requires slight amounts of reformatting in order to be accepted by the program (i.e. unnecessary formatting must be removed other than column titles)
+Credits:
+    Caelan from Kite on YouTube.  Assistance in developing code for the neural network model.
 
-_Picture below reflects Rivian stock from IPO to Novemeber 23, 2023_
-![Image](stockdata/sample_outputs/Output_RIVN.png)
+Citation:
+    Alvaro Bartolome del Canto. investpy - Financial Data Extraction from Investing.com with Python.
+    2018-2021. GitHub Repository. Available at: https://github.com/alvarobartt/investpy
 
-_Picture below reflects Apple stock from January 1, 2023 to December 19, 2023_
-![Image](stockdata/sample_outputs/Output_AAPL.png)
+Notes:
+    Small observation made is that the model seems to work well with stock data just over one year.
 
-_Picture below reflects Nvidia stock from May 10, 2023 to December 19, 2023_
-![Image](stockdata/sample_outputs/Output_NVDA.png)
+Picture below shows Apple stock prediction with the following statistics
+- Actual April 24, 2024 close: $169.02 USD (downtrend)
+- Predicted April 24, 2024 close: $169.71 USD (predicted downtrend)
+- Training and validation data spanning January 1, 2023 to March 27, 2023 (20 trading days before April 24)
+- Model forecasted 20-day price accuracy: 99.59% (pre Q1-earnings)
+![Image](stockdata/sample_outputs/confirmation_outputs/AAPL_Sample_Output.png)
+
+Picture below shows Disney stock prediction with the following statistics
+- Actual April 24, 2024 close: $113.92 USD (downtrend)
+- Predicted April 24, 2024 close: $111.93 USD (predicted downtrend)
+- Training and validation data spanning January 1, 2023 to March 27, 2023 (20 trading days before April 24)
+- Model forecasted 20-day price accuracy: 98.25% (post Q1-earnings)
+![Image](stockdata/sample_outputs/confirmation_outputs/DIS_Sample_Output.png)
+
+Picture below shows Oracle stock prediction with the following statistics
+- Actual April 24, 2024 close: $115.34 USD (downtrend)
+- Predicted April 24, 2024 close: $123.39 USD (downtrend)
+- Training and validation data spanning January 1, 2023 to March 27, 2023 (20 trading days before April 24)
+- Model forecasted 20-day price accuracy: 93.02% (post Q1-earnings)
+![Image](stockdata/sample_outputs/confirmation_outputs/ORCL_Sample_Output.png)
