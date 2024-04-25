@@ -19,7 +19,7 @@ Confirmation results following update of model epoch scoring formula
 
 <h3>Disney (DIS) Prediction (98.25% Accuracy)</h3>
 <ul>
-  <li>Actual April 24, 2024 close: $113.92 USD> (downtrend)</li>
+  <li>Actual April 24, 2024 close: $113.92 USD (downtrend)</li>
   <li>Predicted April 24, 2024 close: $111.93 USD (predicted downtrend)</li>
   <li>Training and validation data spanning January 1, 2023 to March 27, 2023 (20 trading days before April 24)</li>
   <li>Model forecasted 20-day price accuracy: 98.25% (post Q1-earnings)</li>
