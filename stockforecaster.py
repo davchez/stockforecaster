@@ -15,7 +15,7 @@ Description:
 
 Bugs: 
     Investpy and Investiny packages are deprecated, and are unreliable.
-    Length of necessary stock data must be longer than one month.
+    Length of necessary stock data must be longer than six months.
 
 Credits:
     Caelan from Kite on YouTube.  Assistance in developing code for the neural network model.
@@ -32,8 +32,13 @@ import investpy
 import glob
 import os
 
+DAYS_AHEAD = 20 # Predicting 20 days ahead
+WINDOW_SIZE = 20 # Size of window (20 days)
 DIRECTORY = 'saved_models/'
 PATH = DIRECTORY + 'model_epoch_*.keras'
+
+date_format = 'Unused, default data used'
+
 epochs = glob.glob( PATH )
 
 # Wipes out saved models folder before proceeding
@@ -56,8 +61,9 @@ try:
                                             exchange = exchange )
     investing_id = int( search_result[ 0 ][ 'ticker' ] ) # Specific stock ID ticker collected from search_assets
     print( f"\ninvestiny Search successful.\n" )
-    start_date = input( "Enter start date (mm/dd/yyyy): " ) # Beginning date of stock history for analysis
-    end_date = input( "Enter end date (mm/dd/yyyy): " ) # End date of stock history for analysis 
+    date_format = 'mm/dd/yyyy'
+    start_date = input( f"Enter start date ({ date_format }): " ) # Beginning date of stock history for analysis
+    end_date = input( f"Enter end date ({ date_format }): " ) # End date of stock history for analysis 
     historical_data = investiny.historical_data( investing_id = investing_id, # Investiny scrapes Investing.com for the specific stock and its data if found
                                                 from_date = start_date, 
                                                 to_date = end_date )
@@ -71,12 +77,13 @@ except Exception as e: # Investiny package failed due to erroneous user input or
                                                countries = [ country ],
                                                n_results = 1 )
         print( f"\ninvestpy Search successful.\n" )
-        start_date = input( "Enter start date (dd/mm/yyyy): " ) # Beginning date of stock history for analysis
-        end_date = input( "Enter end date (dd/mm/yyyy): " ) # End date of stock history for analysis
+        date_format = 'dd/mm/yyyy'
+        start_date = input( f"Enter start date ({ date_format }): " ) # Beginning date of stock history for analysis
+        end_date = input( f"Enter end date ({ date_format }): " ) # End date of stock history for analysis
         historical_data = search_result.retrieve_historical_data( from_date = start_date, # DataFrame of historical stock data from time range
                                                                  to_date = end_date )
     except Exception as e: # Investiny and investpy failed
-        print( "Search failed:", e, '\nResorting to default data.' ) # Default data being AAPL stock data
+        print( "Search failed:", e, '\nResorting to default data.' ) # Default data being CSV stock data
         default = True # Resort to default, use preloaded CSV file
 
 if default == False: # If investiny/investpy worked
@@ -85,8 +92,8 @@ if default == False: # If investiny/investpy worked
           END: { end_date }\n""" )
     df = historical_data.reset_index() # Ensuring that indices are formatted correctly before analysis/tidying
 else: # IF investiny/investpy failed
-    df = pd.read_csv( 'stockdata/AAPL_Stock_Data.csv' )
-    symbol = 'AAPL'
+    symbol = 'RIVN'
+    df = pd.read_csv( f'stockdata/{ symbol }_Stock_Data.csv' )
 
 # Clean data and prepare for analysis
 df.columns = df.columns.str.lower() # Lowercasing all column labels in the DataFrame
@@ -147,19 +154,11 @@ def slidingWindow( input, window_size ):
 
     for i in range( ( len( input ) - 1 ) - window_size ):
 
-        # Creates windows of size "WINDOW_SIZE"
-        window = input[ i:( i + window_size ), 0 ]
+        window = input[ i:( i + window_size ), 0 ] # Creates windows of size "WINDOW_SIZE"
+        WINDOW.append( window ) # Appends windows into WINDOW array
+        TARGET.append( input[ i + window_size, 0 ] ) # Appends a "target" data point which will be the 21st point (relatively) of each window
 
-        # Appends windows into WINDOW array
-        WINDOW.append( window )
-        
-        # Appends a "target" data point which will be the 21st point (relatively) of each window
-        TARGET.append( input[ i + window_size, 0 ] )
-
-    # Creating numpy arrays WITHOUT INDICES which contain necessary data points (thus, returns tuples)
-    return np.array( WINDOW ), np.array( TARGET )
-
-WINDOW_SIZE = 20
+    return np.array( WINDOW ), np.array( TARGET ) # Creating numpy arrays WITHOUT INDICES which contain necessary data points (thus, returns tuples)
 
 # The first 80% of the data is parsed into 20 data points with an associated target point; this is repeated throughout the first 80% of the dataset
 training_window, training_target = slidingWindow( training_df, WINDOW_SIZE )
@@ -204,7 +203,7 @@ from keras.callbacks import ModelCheckpoint
 CONSTANT = 12
 
 # Dropped out 20% of neurons to prevent overfitting during each training phase
-STD_DROPOUT_LAYER = 0.2
+STD_DROPOUT_LAYER = 0.25
 
 tf.random.set_seed( CONSTANT )
 np.random.seed( CONSTANT )
@@ -224,15 +223,15 @@ filepath = 'saved_models/model_epoch_{epoch:02d}.keras'
 
 # Model only remembers best training points and forgets lossy training data
 checkpoint = ModelCheckpoint( filepath = filepath, 
-                              # monitor = 'val_loss', ################## COMMENTED OUT TO TEST OUT OTHER MONITOR METHODS, WE'RE GOING TO FOCUS ON ACCURACY
+                              # monitor = 'val_loss', # Unnecessary as we have scoring formula
                               verbose = 1,
-                              # save_best_only = True, ################## COMMENTED OUT TO TEST OUT OTHER MONITOR METHODS
+                              # save_best_only = True, # We need all epochs unfortunately
                               mode = 'min' )
 
-# History of all models which will be compiled into 100 generationally-learning epochs
+# History of all model epochs (15)
 history = model.fit( training_window, training_target,
                      epochs = 15,
-                     batch_size = 20,
+                     batch_size = 64,
                      validation_data = ( val_window, val_target ),
                      callbacks = [ checkpoint ],
                      verbose = 1,
@@ -248,7 +247,7 @@ import re
 from keras.models import load_model
 from sklearn.metrics import mean_squared_error
 
-ALPHA = 0.2
+ALPHA = 0.25
 epochs = glob.glob( PATH )
 
 training_target = scaler.inverse_transform( [ training_target ] )
@@ -261,41 +260,24 @@ for epoch in epochs:
     regex = re.search( r'model_epoch_(\d+).keras', epoch )
     index = int( regex.group( 1 ) ) - 1
 
-    # Training phase movement of first 80% of data is predicted using optimal epoch
-    # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
     training_prediction_temp = scaler.inverse_transform( model.predict( training_window ) )
     training_prediction_temp = np.reshape( training_prediction_temp, training_prediction_temp.shape[ 0 ] )
-    
-    # Testing phase movement of remaining 20% of data is predicted using optimal epoch
-    # Removes the standardizing scale of [0, 1] to return prediction to original scaling [min, max]
+
     val_prediction_temp = scaler.inverse_transform( model.predict( val_window ) )
     val_prediction_temp = np.reshape( val_prediction_temp, val_prediction_temp.shape[ 0 ] )
 
-    # Actual training data to be compared against, i.e. first 80% of original data set
-    # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
     training_target_temp = np.reshape( training_target, training_prediction_temp.shape[ 0 ] )
     val_target_temp = np.reshape( val_target, val_prediction_temp.shape[ 0 ] )
 
-    # Actual validation data to be compared against, i.e. first 80% of original data set
-    # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
-    training_MSE = mean_squared_error( training_target_temp, training_prediction_temp )
+    training_RMSE = np.sqrt( mean_squared_error( training_target_temp, training_prediction_temp ) )
+    val_RMSE = np.sqrt( mean_squared_error( val_target_temp, val_prediction_temp ) )
 
-    # Actual validation data to be compared against, i.e. last 20% of original data set
-    # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
-    val_MSE = mean_squared_error( val_target_temp, val_prediction_temp )
-
-    # Root mean square error showing loss between actual training data and training prediction from epoch
-    training_RMSE = np.sqrt( training_MSE )
-
-    # Root mean square error showing loss between actual validation data and validation prediction from epoch
-    val_RMSE = np.sqrt( val_MSE )
-
-    score = ALPHA * ( training_MSE + training_RMSE ) + ( 1 - ALPHA ) * ( val_MSE + val_RMSE )
+    score = ALPHA * ( training_RMSE ) + ( 1 - ALPHA ) * ( val_RMSE )
     
-    scores.append( ( str( index + 1 ), training_MSE, training_RMSE, val_MSE, val_RMSE, training_prediction_temp, val_prediction_temp, score ) )
+    scores.append( ( str( index + 1 ), training_RMSE, val_RMSE, training_prediction_temp, val_prediction_temp, score ) )
 
 scores_df = pd.DataFrame( scores )
-scores_df.columns = [ 'epoch', 'training MSE', 'training RMSE', 'validation MSE', 'validation RMSE', 'training prediction', 'validation prediction', 'score' ]
+scores_df.columns = [ 'epoch', 'training RMSE', 'validation RMSE', 'training prediction', 'validation prediction', 'score' ]
 
 print( scores_df )
 
@@ -306,16 +288,16 @@ if int( optimal_epoch_num ) < 10:
     optimal_epoch_num = '0' + optimal_epoch_num
 
 optimal_model = load_model( 'saved_models/model_epoch_' + str( optimal_epoch_num ) + '.keras' )
-optimal_training_RMSE = scores_df.iloc[ optimal_index, 2 ]
-optimal_val_RMSE = scores_df.iloc[ optimal_index, 4 ]
+optimal_training_RMSE = scores_df.iloc[ optimal_index, 1 ]
+optimal_val_RMSE = scores_df.iloc[ optimal_index, 2 ]
 
 # Training phase movement of first 80% of data is predicted using optimal epoch
 # Removes the standardizing scaler of [0, 1] to return prediction to original scaling [min, max]
-training_prediction = scores_df.iloc[ optimal_index, 5 ]
+training_prediction = scores_df.iloc[ optimal_index, 3 ]
     
 # Testing phase movement of remaining 20% of data is predicted using optimal epoch
 # Removes the standardizing scale of [0, 1] to return prediction to original scaling [min, max]
-val_prediction = scores_df.iloc[ optimal_index, 6 ]
+val_prediction = scores_df.iloc[ optimal_index, 4 ]
 
 training_target = np.reshape( training_target, ( -1, 1 ) )
 val_target = np.reshape( val_target, ( -1, 1 ) )
@@ -329,8 +311,6 @@ forecast = []
 
 # Using final 20-day window from validation phase as a starting point for prediction
 current_window = last_window
-
-DAYS_AHEAD = 20
 
 # Actual model prediction: Looking 20 days into the future and continunally predicting using a sliding window
 # There is no training/validation phase here: This is all epoch prediction
@@ -383,17 +363,14 @@ stock_plt.set_xlabel( 'Days' )
 stock_plt.set_ylabel( 'Stock Price in USD' )
 stock_plt.legend( )
 
-loss_plt.plot( EPOCHS_RANGE, training_loss_list, label = 'Training Loss', color = 'orange' )
-loss_plt.plot( EPOCHS_RANGE, val_loss_list, label = 'Validation Loss', color = 'blue' )
+loss_plt.plot( EPOCHS_RANGE, scores_df[ 'training RMSE' ], label = 'Training RMSE', color = 'orange' )
+loss_plt.plot( EPOCHS_RANGE, scores_df[ 'validation RMSE' ], label = 'Validation RMSE', color = 'blue' )
 loss_plt.axvline( x = int( optimal_epoch_num ), color = 'red', alpha = 0.2,
-                  label = 'Optimal Epoch (epoch ' + str( optimal_epoch_num ) + ')' )
-loss_plt.set_title( 'Training and Validation Loss' )
+                  label = 'Model Epoch used (epoch ' + str( optimal_epoch_num ) + ')' )
+loss_plt.set_title( 'Training and Validation RMSE' )
 loss_plt.set_xlabel( 'Epochs' )
-loss_plt.set_ylabel( 'Loss' )
+loss_plt.set_ylabel( 'RMSE' )
 loss_plt.legend( )
 
-plt.figtext( 0.5, 0.01, 'Training loss USD (RMSE): ' + str( round( optimal_training_RMSE, 3 ) ) + 
-             '. Testing loss USD (RMSE): ' + str( round( optimal_val_RMSE, 3 ) ) +
-             '. Optimal epoch score: ' + str( round( scores_df[ 'score' ].min(), 5 ) ), 
-             ha = 'center', fontsize = 8 )
+plt.figtext( 0.5, 0.01, f'Stock history (format:{ date_format }) is from { start_date } to { end_date }. Prediction is 20 trading days after end date.', ha = 'center', fontsize = 10 )
 plt.show( )
