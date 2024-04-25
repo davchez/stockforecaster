@@ -1,29 +1,27 @@
-Title: Stock Price Predictor
-Author: David Sanchez
+Title: Stock Price Predictor\
+Author: David Sanchez\
 GitHub: https://github.com/davchez
 
-Description:
+Description:\
     This machine learning Python project leverages the neural network capabilities of the TensorFlow
     and Keras packages.  It formats historic stock prices into time series data to train a long short-term
     memory (LSTM) model.  The model predicts stock price movements x amount of days into the future;
-    it generally works best with predictions spanning 20 days.
+    it generally works best with predictions spanning 20 days. The model allows 15 epochs of the entire data set, 
+    which, according to scientific literature found in https://www.geeksforgeeks.org, is enough to train the model 
+    and to prevent overfitting.
 
-    The model allows 15 epochs of the entire data set, which, according to scientific literature
-    found in https://www.geeksforgeeks.org, is enough to train the model and to prevent
-    overfitting.
-
-Bugs: 
+Bugs:\
     Investpy and Investiny packages are not entirely reliable.
     Length of necessary stock data must be longer than 5 months for program to work.
 
-Credits:
+Credits:\
     Caelan from Kite on YouTube.  Assistance in developing code for the neural network model.
 
-Citation:
+Citation:\
     Alvaro Bartolome del Canto. investpy - Financial Data Extraction from Investing.com with Python.
     2018-2021. GitHub Repository. Available at: https://github.com/alvarobartt/investpy
 
-Notes:
+Notes:\
     Small observation made is that the model seems to work well with stock data just over one year.
 
 Picture below shows Apple stock prediction with the following statistics
