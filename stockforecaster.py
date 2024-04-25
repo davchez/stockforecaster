@@ -99,7 +99,7 @@ if default == False: # If investiny/investpy worked
 else: # IF investiny/investpy failed
     symbol = 'AAPL' # Default stock to be used
     df = pd.read_csv( f'stockdata/{ symbol }_Stock_Data.csv' )
-    
+
 
 # Clean data and prepare for analysis
 df.columns = df.columns.str.lower() # Lowercasing all column labels in the DataFrame
@@ -218,7 +218,7 @@ checkpoint = ModelCheckpoint( filepath = filepath,
 # History of all model epochs (15)
 history = model.fit( training_window, training_target,
                      epochs = 15,
-                     batch_size = 64,
+                     batch_size = 64, 
                      validation_data = ( val_window, val_target ),
                      callbacks = [ checkpoint ],
                      verbose = 1,
