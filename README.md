@@ -1,7 +1,7 @@
 <div align = "center">
   
 # StockForecaster
-##### Author: David Sanchez &nbsp; • &nbsp; Development: Aug 2023 — Present
+##### Author: David Sanchez &nbsp; • &nbsp; Development: Aug 2023 — Present &nbsp; • &nbsp; Deployment to Vercel imminent
   
 </div>
 
