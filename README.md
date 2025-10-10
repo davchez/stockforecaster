@@ -11,7 +11,7 @@ The machine learning model leverages TensorFlow and Keras to format historic sto
 ### Technical Stack
 
 **Backend:** Python 3.11, TensorFlow 2.15, AWS Lambda (Docker containerized), API Gateway, DynamoDB  
-**Frontend:** Next.js 14, TypeScript, React (in development)  
+**Frontend:** Next.js 14, TypeScript (Tailwind), React (in development)  
 **ML Model:** LSTM with 50 units, 20% dropout, custom weighted RMSE epoch selection  
 **Features:** Async request/response pattern, VADER sentiment analysis, cold start retry logic
 
