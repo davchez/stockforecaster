@@ -1,6 +1,6 @@
 # StockForecaster
 
-**Currently in Progress: Vercel deployment imminent as of Octoer 9, 2025**
+**Currently in Progress: Vercel deployment imminent as of October 9, 2025**
 
 ## Description
 
