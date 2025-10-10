@@ -227,7 +227,7 @@ def process_prediction(event):
 
         table.update_item(
             Key = {'request-id': request_id},
-            UpdateExpression = 'SET #status = :status, error = :error, updated_at = :updated_at',
+            UpdateExpression = 'SET #status = :status, #error = :error, updated_at = :updated_at',
             ExpressionAttributeNames = {'#status': 'status', '#error': 'error'},
             ExpressionAttributeValues = {
                 ':status': 'FAILED',
