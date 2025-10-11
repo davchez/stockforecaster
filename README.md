@@ -39,7 +39,7 @@ The machine learning model leverages TensorFlow and Keras to format historic sto
 #### GET /status/{request_id}
 > Poll for completion and retrieve results
 
-_Note_: Model training takes 2-4 minutes but uses async architecture to avoid API Gateway timeout limits.
+_Note_: Model training takes 1-2 minutes but uses async architecture to avoid API Gateway timeout limits.
 
 &nbsp;
 
