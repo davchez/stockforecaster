@@ -1,7 +1,7 @@
 <div align = "center">
   
 # StockForecaster
-##### Author: David Sanchez &nbsp; • &nbsp; Development: Aug 2023 — Present &nbsp; • &nbsp; [Deployment (Vercel)](https://stockforecaster-tau.vercel.app/)
+##### Author: David Sanchez &nbsp; • &nbsp; Development: Aug 2023 — Present &nbsp; • &nbsp; [Live Demo - Vercel Deployment](https://stockforecaster-tau.vercel.app/)
   
 </div>
 
@@ -9,7 +9,7 @@
 
 ## Description
 
-StockForecaster is a full-stack stock price prediction platform that uses LSTM neural networks to forecast prices 20 days into the future. The project consists of a Python/TensorFlow backend deployed as a serverless AWS Lambda function, accessible via a public REST API with authentication and rate limiting, and a Next.js/TypeScript frontend (in development).
+StockForecaster is a full-stack stock price prediction platform that uses LSTM neural networks to forecast prices 20 days into the future. The project consists of a Python/TensorFlow backend deployed as a serverless AWS Lambda function, accessible via a public REST API with authentication and rate limiting, and a Next.js/TypeScript frontend deployed to Vercel.
 
 The machine learning model leverages TensorFlow and Keras to format historic stock prices into time series data for training a Long Short-Term Memory (LSTM) network. The model works best with predictions spanning 20 days and stock history of at least 1 year. Training uses 15 epochs with 64 batches each, following best practices from scientific literature to prevent overfitting.
 
@@ -21,7 +21,7 @@ The machine learning model leverages TensorFlow and Keras to format historic sto
 > Python 3.11, TensorFlow 2.15, AWS Lambda (Docker containerized), API Gateway, DynamoDB  
 
 #### Frontend 
-> Next.js 14, TypeScript (Tailwind), React (in development)  
+> Next.js 14, TypeScript, React, Tailwind CSS (deployed to Vercel)
 
 #### ML Model
 > LSTM with 50 units, 20% dropout, custom weighted RMSE epoch selection (75% validation, 25% training)
