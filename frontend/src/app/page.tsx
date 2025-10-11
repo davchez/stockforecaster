@@ -245,7 +245,7 @@ export default function Home() {
           {/* Step 3: End Date Input */}
           <div className = "mb-6">
             <label htmlFor = "startDate" className = "block text-sm font-medium mb-2">
-              Start Date
+              End Date
             </label>
             <input 
               type = "date"
