@@ -3,7 +3,7 @@
 # StockForecaster
 ##### Author: David Sanchez &nbsp; • &nbsp; Development: Aug 2023 — Present &nbsp; • &nbsp; [Live Demo - Vercel Deployment](https://stockforecaster-tau.vercel.app/)
 
-![Image](stockdata/sample_outputs/stockforecaster-demo.png)
+![Image](assets/stockforecaster-demo.png)
   
 </div>
 
@@ -64,7 +64,7 @@ Confirmation results following update of model epoch scoring formula (75% weight
 - Training and validation data spanning January 1, 2023 to March 27, 2024 (20 trading days before April 24)
 - Model forecasted 20-day price accuracy: 99.59% (pre Q1-earnings)
 
-![Image](stockdata/sample_outputs/confirmation_outputs/AAPL_Sample_Output.png)
+![Image](assets/AAPL_Sample_Output.png)
 
 &nbsp;
 
@@ -78,7 +78,7 @@ Confirmation results following update of model epoch scoring formula (75% weight
 - Training and validation data spanning January 1, 2023 to March 27, 2024 (20 trading days before April 24)
 - Model forecasted 20-day price accuracy: 98.25% (post Q1-earnings)
 
-![Image](stockdata/sample_outputs/confirmation_outputs/DIS_Sample_Output.png)
+![Image](assets/DIS_Sample_Output.png)
 
 &nbsp;
 
@@ -92,7 +92,7 @@ Confirmation results following update of model epoch scoring formula (75% weight
 - Training and validation data spanning January 1, 2023 to March 27, 2024 (20 trading days before April 24)
 - Model forecasted 20-day price accuracy: 93.02% (post Q1-earnings)
 
-![Image](stockdata/sample_outputs/confirmation_outputs/ORCL_Sample_Output.png)
+![Image](assets/ORCL_Sample_Output.png)
 
 &nbsp;
 
@@ -106,4 +106,4 @@ Confirmation results following update of model epoch scoring formula (75% weight
 - Training and validation data spanning January 1, 2023 to March 27, 2024 (20 trading days before April 24)
 - Model forecasted 20-day price accuracy: 95.54% (pre Q1-earnings)
 
-![Image](stockdata/sample_outputs/confirmation_outputs/GOOG_Sample_Output.png)
+![Image](assets/GOOG_Sample_Output.png)
